@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LensVault - Private Photographer Photo-Sharing Portal (Live Preview for Boss)</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- JSZip & FileSaver for Instant Real ZIP Downloads -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            vault: {
+              950: "#080706",
+              900: "#100f0d",
+              850: "#171512",
+              800: "#1f1c18",
+              700: "#2d2924",
+              600: "#443f38",
+              400: "#8a8175",
+              200: "#d6d0c7",
+              100: "#ede8e1",
+              50: "#faf8f5",
+              accent: "#c5a059", // Warm Champagne Gold
+              accentHover: "#d9b36a",
+            }
+          },
+          fontFamily: {
+            serif: ['Georgia', 'serif'],
+            sans: ['system-ui', '-apple-system', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #100f0d; }
+    ::-webkit-scrollbar-thumb { background: #2d2924; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #c5a059; }
+    .gallery-img { transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+    .gallery-img:hover { transform: scale(1.03); }
+  </style>
+</head>
+<body class="bg-vault-950 text-vault-100 min-h-screen flex flex-col font-sans selection:bg-vault-accent selection:text-vault-950">
+
+  <!-- Top Sticky Navigation -->
+  <header class="border-b border-vault-800/80 bg-vault-950/90 backdrop-blur-md sticky top-0 z-40 px-6 md:px-10 py-4 flex items-center justify-between">
+    <div class="flex items-center space-x-3 cursor-pointer" onclick="navigateTo('landing')">
+      <div class="w-8 h-8 rounded-full border border-vault-accent/40 flex items-center justify-center text-vault-accent shadow-sm">
+        <i data-lucide="camera" class="w-4 h-4"></i>
+      </div>
+      <span class="text-xs font-serif tracking-widest uppercase text-vault-100 font-semibold">
+        LENSVAULT <span class="text-[10px] text-vault-accent font-sans ml-1 font-normal">STUDIOS</span>
+      </span>
+    </div>
+
+    <!-- Quick Navigation Switcher for Boss -->
+    <div class="flex items-center space-x-2 bg-vault-900 border border-vault-800 p-1 rounded-full text-xs">
+      <button onclick="navigateTo('landing')" id="navLanding" class="px-3 py-1 rounded-full text-vault-accent font-medium bg-vault-800 transition">Landing</button>
+      <button onclick="navigateTo('login')" id="navLogin" class="px-3 py-1 rounded-full text-vault-400 hover:text-white transition">Client Sign In</button>
+      <button onclick="navigateTo('admin')" id="navAdmin" class="px-3 py-1 rounded-full text-vault-400 hover:text-white transition">Photographer Admin</button>
+      <button onclick="enterClientGallery('c1')" id="navGallery" class="px-3 py-1 rounded-full text-vault-400 hover:text-white transition">Emma's Gallery</button>
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- 1. LANDING PAGE -->
+  <!-- ========================================================================= -->
+  <section id="pageLanding" class="flex-1 flex flex-col justify-between p-6 md:p-12 max-w-6xl mx-auto w-full">
+    <div class="text-center py-16 flex flex-col items-center">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-vault-700/50 bg-vault-900/60 text-vault-400 text-xs tracking-wider uppercase mb-8">
+        <i data-lucide="lock" class="w-3.5 h-3.5 text-vault-accent"></i>
+        <span>Private Encrypted Client Vaults</span>
+      </div>
+
+      <h1 class="text-4xl md:text-6xl font-serif text-vault-50 tracking-tight max-w-4xl leading-[1.15] mb-6">
+        Your Memories, <br>
+        <span class="italic font-light text-vault-accent">Beautifully Preserved.</span>
+      </h1>
+
+      <p className="text-base text-vault-400 max-w-2xl font-light leading-relaxed mb-10">
+        Enter your private photoshoot gallery. Our neural curation automatically discovers and organizes your portraits for seamless preview and full-resolution archival download.
+      </p>
+
+      <div class="flex items-center gap-4 mt-4">
+        <button onclick="navigateTo('login')" class="px-8 py-3.5 rounded-full bg-vault-accent hover:bg-vault-accentHover text-vault-950 font-medium text-xs tracking-widest uppercase flex items-center gap-2 transition shadow-lg shadow-vault-accent/10">
+          <span>Access My Gallery</span>
+          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </button>
+        <button onclick="navigateTo('admin')" class="px-6 py-3.5 rounded-full bg-vault-900 hover:bg-vault-850 border border-vault-700 text-vault-200 text-xs tracking-widest uppercase flex items-center gap-2 transition">
+          <i data-lucide="shield" class="w-3.5 h-3.5 text-vault-accent"></i>
+          <span>Photographer Admin</span>
+        </button>
+      </div>
+
+      <!-- Editorial Image Grid Showcase -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 w-full max-w-5xl">
+        <div class="group relative aspect-[3/4] rounded-2xl overflow-hidden border border-vault-800 bg-vault-900">
+          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover gallery-img filter brightness-95">
+          <div class="absolute inset-0 bg-gradient-to-t from-vault-950/80 via-transparent to-transparent"></div>
+          <div class="absolute bottom-4 left-4 text-left">
+            <span class="text-[10px] uppercase tracking-widest text-vault-accent font-mono">Series A</span>
+            <h3 class="text-sm font-serif text-vault-100">Editorial Studio Session</h3>
+          </div>
+        </div>
+
+        <div class="group relative aspect-[3/4] rounded-2xl overflow-hidden border border-vault-800 bg-vault-900 md:-translate-y-4">
+          <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover gallery-img filter brightness-95">
+          <div class="absolute inset-0 bg-gradient-to-t from-vault-950/80 via-transparent to-transparent"></div>
+          <div class="absolute bottom-4 left-4 text-left">
+            <span class="text-[10px] uppercase tracking-widest text-vault-accent font-mono">Series B</span>
+            <h3 class="text-sm font-serif text-vault-100">Graduate Class of 2026</h3>
+          </div>
+        </div>
+
+        <div class="group relative aspect-[3/4] rounded-2xl overflow-hidden border border-vault-800 bg-vault-900">
+          <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover gallery-img filter brightness-95">
+          <div class="absolute inset-0 bg-gradient-to-t from-vault-950/80 via-transparent to-transparent"></div>
+          <div class="absolute bottom-4 left-4 text-left">
+            <span class="text-[10px] uppercase tracking-widest text-vault-accent font-mono">Series C</span>
+            <h3 class="text-sm font-serif text-vault-100">Sunset Architectural Series</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================= -->
+  <!-- 2. CLIENT LOGIN PAGE -->
+  <!-- ========================================================================= -->
+  <section id="pageLogin" class="hidden flex-1 flex flex-col justify-center items-center p-6">
+    <div class="w-full max-w-md bg-vault-900 border border-vault-800 rounded-3xl p-8 shadow-2xl relative">
+      <div class="text-center mb-6">
+        <span class="text-xs font-serif uppercase tracking-widest text-vault-accent">Private Vault Access</span>
+        <h2 class="text-2xl font-serif text-vault-100 mt-1">Sign In to Your Gallery</h2>
+        <p class="text-xs text-vault-400 mt-1">Enter your assigned photoshoot access code and password</p>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs uppercase tracking-wider text-vault-400 mb-1.5">Gallery Access Code</label>
+          <input type="text" id="loginAccessCode" value="EMMA-OCT26" class="w-full px-4 py-3 rounded-xl bg-vault-950 border border-vault-700 text-vault-100 text-sm font-mono tracking-wider uppercase focus:border-vault-accent focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-xs uppercase tracking-wider text-vault-400 mb-1.5">Password</label>
+          <input type="password" id="loginPassword" value="Memory2026!" class="w-full px-4 py-3 rounded-xl bg-vault-950 border border-vault-700 text-vault-100 text-sm focus:border-vault-accent focus:outline-none">
+        </div>
+
+        <button onclick="handleLoginSubmit()" class="w-full py-3.5 rounded-xl bg-vault-accent hover:bg-vault-accentHover text-vault-950 font-semibold text-xs tracking-widest uppercase flex items-center justify-center gap-2 transition mt-2">
+          <span>Enter Private Gallery</span>
+          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </button>
+
+        <div class="p-3 rounded-xl bg-vault-950 border border-vault-800 text-[11px] text-vault-400 space-y-1">
+          <p class="text-vault-accent font-semibold">Demo Client Codes for Boss:</p>
+          <p>• Emma Vance: <span class="font-mono text-white">EMMA-OCT26</span> (Pass: <span class="font-mono">Memory2026!</span>)</p>
+          <p>• Liam Chen: <span class="font-mono text-white">LIAM-OCT26</span> (Pass: <span class="font-mono">Memory2026!</span>)</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================= -->
+  <!-- 3. PHOTOGRAPHER ADMIN DASHBOARD -->
+  <!-- ========================================================================= -->
+  <section id="pageAdmin" class="hidden flex-1 max-w-7xl mx-auto px-6 md:px-10 py-8 w-full space-y-8">
+    <div class="flex items-center justify-between pb-6 border-b border-vault-800">
+      <div>
+        <h2 class="text-2xl font-serif text-vault-50">Photographer Studio Dashboard</h2>
+        <p class="text-xs text-vault-400 mt-1">Photoshoot Management, Client Roster & Face-Recognition Review</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="publishToggleBtn" onclick="togglePublishStatus()" class="px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/40 text-emerald-400 text-xs font-semibold uppercase tracking-wider hover:bg-emerald-500 hover:text-black transition">
+          Status: Published (Live)
+        </button>
+      </div>
+    </div>
+
+    <!-- Telemetry Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-vault-900 border border-vault-800 p-5 rounded-2xl">
+        <span class="text-xs text-vault-400 uppercase tracking-wider font-mono">Photoshoots</span>
+        <div class="text-3xl font-serif text-vault-100 mt-1">1</div>
+      </div>
+      <div class="bg-vault-900 border border-vault-800 p-5 rounded-2xl">
+        <span class="text-xs text-vault-400 uppercase tracking-wider font-mono">Registered Clients</span>
+        <div class="text-3xl font-serif text-vault-accent mt-1">5</div>
+      </div>
+      <div class="bg-vault-900 border border-vault-800 p-5 rounded-2xl">
+        <span class="text-xs text-vault-400 uppercase tracking-wider font-mono">Photographs</span>
+        <div class="text-3xl font-serif text-vault-200 mt-1">6</div>
+      </div>
+      <div class="bg-vault-900 border border-vault-800 p-5 rounded-2xl">
+        <span class="text-xs text-vault-400 uppercase tracking-wider font-mono">Pending Review</span>
+        <div class="text-3xl font-serif text-emerald-400 mt-1" id="reviewCountBadge">3</div>
+      </div>
+    </div>
+
+    <!-- Active Photoshoot Panel -->
+    <div class="bg-vault-900/60 border border-vault-800 rounded-3xl p-6">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <span class="text-[10px] font-mono uppercase tracking-wider text-vault-accent">Active Session</span>
+          <h3 class="text-xl font-serif text-vault-100">College Portrait Session — October 2026</h3>
+          <p class="text-xs text-vault-400 font-mono mt-0.5">Session Date: 2026-10-20 • Location: The Quad & Library</p>
+        </div>
+      </div>
+
+      <!-- 5 Registered Clients Roster -->
+      <h4 class="text-xs uppercase tracking-wider text-vault-400 mb-3 font-semibold flex items-center gap-2">
+        <i data-lucide="users" class="w-3.5 h-3.5 text-vault-accent"></i> 5 Registered Clients (Emma, Liam, Sophia, Marcus, Zoe)
+      </h4>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
+        <div class="p-3.5 rounded-xl border border-vault-800 bg-vault-900 flex flex-col justify-between cursor-pointer hover:border-vault-accent transition" onclick="enterClientGallery('c1')">
+          <div>
+            <span class="text-xs font-semibold text-vault-100 block">Emma Vance</span>
+            <span class="text-[10px] font-mono text-vault-accent bg-vault-accent/10 px-1.5 py-0.5 rounded border border-vault-accent/30 mt-1 inline-block">Code: EMMA-OCT26</span>
+          </div>
+          <span class="text-[10px] text-emerald-400 mt-3 flex items-center gap-1"><i data-lucide="external-link" class="w-3 h-3"></i> Preview Gallery</span>
+        </div>
+
+        <div class="p-3.5 rounded-xl border border-vault-800 bg-vault-900 flex flex-col justify-between cursor-pointer hover:border-vault-accent transition" onclick="enterClientGallery('c2')">
+          <div>
+            <span class="text-xs font-semibold text-vault-100 block">Liam Chen</span>
+            <span class="text-[10px] font-mono text-vault-accent bg-vault-accent/10 px-1.5 py-0.5 rounded border border-vault-accent/30 mt-1 inline-block">Code: LIAM-OCT26</span>
+          </div>
+          <span class="text-[10px] text-emerald-400 mt-3 flex items-center gap-1"><i data-lucide="external-link" class="w-3 h-3"></i> Preview Gallery</span>
+        </div>
+
+        <div class="p-3.5 rounded-xl border border-vault-800 bg-vault-900 flex flex-col justify-between">
+          <div>
+            <span class="text-xs font-semibold text-vault-100 block">Sophia Patel</span>
+            <span class="text-[10px] font-mono text-vault-accent bg-vault-accent/10 px-1.5 py-0.5 rounded border border-vault-accent/30 mt-1 inline-block">Code: SOPHIA-OCT26</span>
+          </div>
+          <span class="text-[10px] text-vault-500 mt-3">3 Photos</span>
+        </div>
+
+        <div class="p-3.5 rounded-xl border border-vault-800 bg-vault-900 flex flex-col justify-between">
+          <div>
+            <span class="text-xs font-semibold text-vault-100 block">Marcus Aurelius</span>
+            <span class="text-[10px] font-mono text-vault-accent bg-vault-accent/10 px-1.5 py-0.5 rounded border border-vault-accent/30 mt-1 inline-block">Code: MARCUS-OCT26</span>
+          </div>
+          <span class="text-[10px] text-vault-500 mt-3">2 Photos</span>
+        </div>
+
+        <div class="p-3.5 rounded-xl border border-vault-800 bg-vault-900 flex flex-col justify-between">
+          <div>
+            <span class="text-xs font-semibold text-vault-100 block">Zoe Washington</span>
+            <span class="text-[10px] font-mono text-vault-accent bg-vault-accent/10 px-1.5 py-0.5 rounded border border-vault-accent/30 mt-1 inline-block">Code: ZOE-OCT26</span>
+          </div>
+          <span class="text-[10px] text-vault-500 mt-3">2 Photos</span>
+        </div>
+      </div>
+
+      <!-- Face Recognition Review Queue -->
+      <h4 class="text-xs uppercase tracking-wider text-vault-400 mb-3 font-semibold flex items-center gap-2">
+        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-vault-accent"></i> Face Recognition Match Review Queue (Confidence Scores)
+      </h4>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="reviewCardsContainer">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================= -->
+  <!-- 4. CLIENT PRIVATE GALLERY PAGE -->
+  <!-- ========================================================================= -->
+  <section id="pageGallery" class="hidden flex-1 flex flex-col max-w-7xl mx-auto px-6 md:px-12 py-8 w-full">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-vault-800 gap-4">
+      <div>
+        <span class="text-xs font-mono uppercase tracking-widest text-vault-accent">Private Client Gallery</span>
+        <h2 class="text-3xl md:text-4xl font-serif text-vault-50 mt-1" id="galleryClientTitle">Welcome, Emma Vance</h2>
+        <p class="text-xs text-vault-400 mt-1 font-mono">College Portrait Session — October 2026 • 100% Encrypted Isolation</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button onclick="downloadClientZip()" id="zipDownloadBtn" class="px-5 py-2.5 rounded-full bg-vault-accent hover:bg-vault-accentHover text-vault-950 text-xs font-semibold uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-vault-accent/10 transition">
+          <i data-lucide="folder-archive" class="w-4 h-4"></i>
+          <span>Download All Photos (ZIP)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Photos Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mt-8" id="clientPhotosGrid">
+      <!-- Populated dynamically -->
+    </div>
+  </section>
+
+  <!-- Lightbox Modal -->
+  <div id="lightboxModal" class="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl hidden flex items-center justify-center p-4">
+    <button onclick="closeLightbox()" class="absolute top-6 right-6 p-2 rounded-full bg-vault-900 border border-vault-700 text-vault-400 hover:text-white">
+      <i data-lucide="x" class="w-5 h-5"></i>
+    </button>
+    <div class="max-w-4xl max-h-[85vh] flex flex-col items-center">
+      <img id="lightboxImg" src="" class="max-h-[75vh] max-w-full rounded-xl object-contain shadow-2xl">
+      <div class="w-full mt-4 flex items-center justify-between text-xs text-vault-400 px-2">
+        <span id="lightboxCaption" class="font-mono text-vault-200"></span>
+        <a id="lightboxDownloadBtn" href="" download class="px-4 py-1.5 rounded-lg bg-vault-accent text-vault-950 font-semibold flex items-center gap-1.5">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i> Download Full Resolution
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Client Data Store & Controller -->
+  <script>
+    // State Store
+    const store = {
+      isPublished: true,
+      activeClient: 'c1',
+      clients: {
+        'c1': {
+          name: 'Emma Vance',
+          code: 'EMMA-OCT26',
+          photos: [
+            { id: 'p1', title: 'Emma Vance - Library Steps Solo', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=80', isGroup: false, fav: false },
+            { id: 'p2', title: 'Emma Vance - Quad Natural Light', url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1200&q=80', isGroup: false, fav: true },
+            { id: 'p6', title: 'Graduation Study Group (Emma, Liam, Sophia)', url: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=80', isGroup: true, fav: false }
+          ]
+        },
+        'c2': {
+          name: 'Liam Chen',
+          code: 'LIAM-OCT26',
+          photos: [
+            { id: 'p3', title: 'Liam Chen - Campus Courtyard Solo', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1200&q=80', isGroup: false, fav: false },
+            { id: 'p6', title: 'Graduation Study Group (Emma, Liam, Sophia)', url: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=80', isGroup: true, fav: false }
+          ]
+        }
+      },
+      reviewQueue: [
+        { id: 'r1', client: 'Emma Vance', photo: 'LV_OCT26_001.jpg', thumb: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80', confidence: 0.96, isGroup: false },
+        { id: 'r2', client: 'Liam Chen', photo: 'LV_OCT26_002.jpg', thumb: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80', confidence: 0.94, isGroup: false },
+        { id: 'r3', client: 'Group: Emma & Liam & Sophia', photo: 'LV_OCT26_GROUP_01.jpg', thumb: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=300&q=80', confidence: 0.89, isGroup: true }
+      ]
+    };
+
+    function navigateTo(page) {
+      document.getElementById('pageLanding').classList.add('hidden');
+      document.getElementById('pageLogin').classList.add('hidden');
+      document.getElementById('pageAdmin').classList.add('hidden');
+      document.getElementById('pageGallery').classList.add('hidden');
+
+      // Update nav buttons
+      ['navLanding', 'navLogin', 'navAdmin', 'navGallery'].forEach(id => {
+        document.getElementById(id).className = 'px-3 py-1 rounded-full text-vault-400 hover:text-white transition';
+      });
+
+      if (page === 'landing') {
+        document.getElementById('pageLanding').classList.remove('hidden');
+        document.getElementById('navLanding').className = 'px-3 py-1 rounded-full text-vault-accent font-medium bg-vault-800 transition';
+      } else if (page === 'login') {
+        document.getElementById('pageLogin').classList.remove('hidden');
+        document.getElementById('navLogin').className = 'px-3 py-1 rounded-full text-vault-accent font-medium bg-vault-800 transition';
+      } else if (page === 'admin') {
+        document.getElementById('pageAdmin').classList.remove('hidden');
+        document.getElementById('navAdmin').className = 'px-3 py-1 rounded-full text-vault-accent font-medium bg-vault-800 transition';
+        renderReviewQueue();
+      } else if (page === 'gallery') {
+        document.getElementById('pageGallery').classList.remove('hidden');
+        document.getElementById('navGallery').className = 'px-3 py-1 rounded-full text-vault-accent font-medium bg-vault-800 transition';
+        renderClientGallery();
+      }
+      lucide.createIcons();
+    }
+
+    function handleLoginSubmit() {
+      const code = document.getElementById('loginAccessCode').value.trim().toUpperCase();
+      if (code === 'EMMA-OCT26') {
+        enterClientGallery('c1');
+      } else if (code === 'LIAM-OCT26') {
+        enterClientGallery('c2');
+      } else {
+        alert('Code verified! Loading Emma Vance default client vault.');
+        enterClientGallery('c1');
+      }
+    }
+
+    function enterClientGallery(clientId) {
+      store.activeClient = clientId;
+      navigateTo('gallery');
+    }
+
+    function renderClientGallery() {
+      const client = store.clients[store.activeClient];
+      if (!client) return;
+
+      document.getElementById('galleryClientTitle').textContent = `Welcome, ${client.name}`;
+      const grid = document.getElementById('clientPhotosGrid');
+
+      grid.innerHTML = client.photos.map(p => `
+        <div class="group relative aspect-[3/4] bg-vault-900 border border-vault-800 rounded-2xl overflow-hidden cursor-pointer shadow-md hover:border-vault-accent/50 transition" onclick="openLightbox('${p.url}', '${p.title}')">
+          <img src="${p.url}" class="w-full h-full object-cover gallery-img">
+          <div class="absolute inset-0 bg-gradient-to-t from-vault-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition p-4 flex flex-col justify-between">
+            <div class="flex justify-between items-center">
+              ${p.isGroup ? '<span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-vault-950/80 border border-vault-700 text-vault-300">★ Group Photo</span>' : '<span></span>'}
+              <button onclick="event.stopPropagation(); toggleFav('${p.id}')" class="p-1.5 rounded-full bg-vault-950/80 border border-vault-700 text-vault-300 hover:text-rose-500">
+                <i data-lucide="heart" class="w-3.5 h-3.5 ${p.fav ? 'fill-rose-500 text-rose-500' : ''}"></i>
+              </button>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-xs text-vault-200 font-medium truncate max-w-[200px]">${p.title}</span>
+              <a href="${p.url}" download onclick="event.stopPropagation()" class="p-1.5 rounded-lg bg-vault-800 hover:bg-vault-accent hover:text-vault-950 text-vault-200">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      lucide.createIcons();
+    }
+
+    function toggleFav(photoId) {
+      const client = store.clients[store.activeClient];
+      const p = client.photos.find(i => i.id === photoId);
+      if (p) p.fav = !p.fav;
+      renderClientGallery();
+    }
+
+    function renderReviewQueue() {
+      const container = document.getElementById('reviewCardsContainer');
+      document.getElementById('reviewCountBadge').textContent = store.reviewQueue.length;
+
+      if (store.reviewQueue.length === 0) {
+        container.innerHTML = '<div class="col-span-3 text-center py-8 text-xs text-vault-500 font-mono">All candidate face matches approved!</div>';
+        return;
+      }
+
+      container.innerHTML = store.reviewQueue.map(item => `
+        <div class="p-4 rounded-2xl border border-vault-800 bg-vault-900/90 flex flex-col justify-between space-y-4">
+          <div class="flex items-start space-x-3">
+            <img src="${item.thumb}" class="w-14 h-14 rounded-xl object-cover border border-vault-700 shrink-0">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-vault-100 truncate">${item.client}</span>
+                <span class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">${Math.round(item.confidence * 100)}% Match</span>
+              </div>
+              <span class="text-[11px] text-vault-400 font-mono block mt-1">${item.photo}</span>
+              ${item.isGroup ? '<span class="text-[9px] uppercase tracking-wider text-vault-accent font-mono block mt-0.5">★ Multi-Client Group</span>' : ''}
+            </div>
+          </div>
+          <div class="flex items-center space-x-2 pt-2 border-t border-vault-800">
+            <button onclick="approveReview('${item.id}')" class="flex-1 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-black font-semibold text-xs flex items-center justify-center gap-1 transition">
+              <i data-lucide="check" class="w-3.5 h-3.5"></i> Approve Match
+            </button>
+            <button onclick="rejectReview('${item.id}')" class="p-1.5 rounded-lg border border-vault-700 hover:border-rose-500 text-vault-400 hover:text-rose-400 transition">
+              <i data-lucide="x" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      lucide.createIcons();
+    }
+
+    function approveReview(id) {
+      store.reviewQueue = store.reviewQueue.filter(i => i.id !== id);
+      renderReviewQueue();
+    }
+
+    function rejectReview(id) {
+      store.reviewQueue = store.reviewQueue.filter(i => i.id !== id);
+      renderReviewQueue();
+    }
+
+    function togglePublishStatus() {
+      store.isPublished = !store.isPublished;
+      const btn = document.getElementById('publishToggleBtn');
+      if (store.isPublished) {
+        btn.textContent = 'Status: Published (Live)';
+        btn.className = 'px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/40 text-emerald-400 text-xs font-semibold uppercase tracking-wider hover:bg-emerald-500 hover:text-black transition';
+      } else {
+        btn.textContent = 'Status: Draft (Locked)';
+        btn.className = 'px-4 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/40 text-yellow-400 text-xs font-semibold uppercase tracking-wider hover:bg-yellow-500 hover:text-black transition';
+      }
+    }
+
+    function openLightbox(url, title) {
+      document.getElementById('lightboxImg').src = url;
+      document.getElementById('lightboxCaption').textContent = title;
+      document.getElementById('lightboxDownloadBtn').href = url;
+      document.getElementById('lightboxModal').classList.remove('hidden');
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightboxModal').classList.add('hidden');
+    }
+
+    // Real JSZip Download
+    async function downloadClientZip() {
+      const client = store.clients[store.activeClient];
+      const btn = document.getElementById('zipDownloadBtn');
+      btn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 animate-spin"></i><span>Bundling ZIP Archive...</span>';
+      lucide.createIcons();
+
+      try {
+        const zip = new JSZip();
+        const folder = zip.folder(`${client.name.replace(/\s+/g, '_')}_Gallery`);
+
+        for (let i = 0; i < client.photos.length; i++) {
+          const photo = client.photos[i];
+          const resp = await fetch(photo.url);
+          const blob = await resp.blob();
+          folder.file(`${client.name}_${i + 1}.jpg`, blob);
+        }
+
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        saveAs(zipBlob, `${client.name.replace(/\s+/g, '_')}_Gallery.zip`);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        btn.innerHTML = '<i data-lucide="folder-archive" class="w-4 h-4"></i><span>Download All Photos (ZIP)</span>';
+        lucide.createIcons();
+      }
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      renderReviewQueue();
+    });
+  </script>
+</body>
+</html>
