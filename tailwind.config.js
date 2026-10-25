@@ -1,11 +1,11 @@
-import type { Config } from "tailwindcss";
-
-const config: Config = {
+/** @type {import('tailwindcss').Config} */
+module.exports = {
   content: [
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -20,16 +20,15 @@ const config: Config = {
           200: "#d6d0c7",
           100: "#ede8e1",
           50: "#faf8f5",
-          accent: "#c5a059", // Warm Champagne Gold
+          accent: "#c5a059",
           accentHover: "#d9b36a",
         },
       },
       fontFamily: {
-        serif: ["Playfair Display", "Georgia", "serif"],
-        sans: ["Inter", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+        serif: ["Georgia", "serif"],
+        sans: ["system-ui", "-apple-system", "sans-serif"],
       },
     },
   },
   plugins: [],
 };
-export default config;
