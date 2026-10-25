@@ -66,7 +66,10 @@ export async function GET(req: NextRequest) {
     });
 
     // Increment client download counter
-    await supabaseAdmin.rpc('increment_client_downloads', { client_row_id: clientId }).catch(() => {});
+    // Increment client download counter
+try {
+  await supabaseAdmin.rpc('increment_client_downloads', { client_row_id: clientId });
+} catch {}
 
     // Return downloadable ZIP stream
     return new NextResponse(zipBuffer as unknown as BodyInit, {
