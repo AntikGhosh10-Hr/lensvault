@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Lock, KeyRound, Eye, EyeOff, Camera, ArrowRight, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const defaultTab = searchParams.get('role') === 'admin' ? 'admin' : 'client';
@@ -36,7 +36,6 @@ export default function LoginPage() {
         throw new Error(data.error || 'Authentication failed');
       }
 
-      // Route directly into authenticated gallery
       router.push(`/gallery/${data.photoshootId}`);
     } catch (err: any) {
       setErrorMessage(err.message);
@@ -72,8 +71,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center px-4 py-12 bg-vault-950">
-      
-      {/* Brand Header */}
       <Link href="/" className="flex items-center space-x-2.5 mb-8 group">
         <div className="w-8 h-8 rounded-full border border-vault-accent/40 flex items-center justify-center text-vault-accent group-hover:border-vault-accent transition">
           <Camera className="w-4 h-4" />
@@ -84,11 +81,8 @@ export default function LoginPage() {
       </Link>
 
       <div className="w-full max-w-md bg-vault-900 border border-vault-800 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
-        
-        {/* Subtle Ambient Glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-1 bg-gradient-to-r from-transparent via-vault-accent to-transparent opacity-40" />
 
-        {/* Tab Switcher */}
         <div className="flex border-b border-vault-800 mb-8 pb-3">
           <button
             type="button"
@@ -114,7 +108,6 @@ export default function LoginPage() {
           </button>
         </div>
 
-        {/* Error Alert */}
         {errorMessage && (
           <div className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-3">
             <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
@@ -122,7 +115,6 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Client Access Form */}
         {tab === 'client' ? (
           <form onSubmit={handleClientLogin} className="space-y-5">
             <div>
@@ -173,15 +165,8 @@ export default function LoginPage() {
               <span>{loading ? 'Authenticating Vault...' : 'Enter Private Gallery'}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
-
-            <div className="pt-4 border-t border-vault-800 text-center">
-              <p className="text-[11px] text-vault-500">
-                Can't find your access code or password? Please reach out to your photographer for credential recovery.
-              </p>
-            </div>
           </form>
         ) : (
-          /* Photographer Admin Form */
           <form onSubmit={handleAdminLogin} className="space-y-5">
             <div>
               <label className="block text-xs uppercase tracking-wider text-vault-400 mb-2">
@@ -232,5 +217,17 @@ export default function LoginPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-vault-950 flex items-center justify-center text-vault-400 font-mono text-xs">
+        Loading Private Vault...
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }
